@@ -32,7 +32,7 @@ func NewConn(p Plugin, d ConnData) Conn {
 		p.Name,
 		d.Secret,
 	})
-	var res proto.AuthMessage
+	var res proto.InitMessageResponse
 	c.decoder.Decode(&res)
 	fmt.Println(res.Success)
 	return c
