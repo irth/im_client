@@ -23,11 +23,18 @@ func handlePlugin(conn net.Conn) {
 
 	// first message that's supposed to be sent by the plugin is so called init message
 	// it contains the key used to authorize the plugin
-	var m proto.InitMessage
+	var m proto.Message
 	d.Decode(&m)
 
+	if m.Type != "InitMessage" {
+		// first message is supposed to be an InitMessage
+		return
+	}
+
+	im := m.InitMessage
+
 	// TODO: make secret configurable
-	if m.Secret != "sekret" {
+	if im.Secret != "sekret" {
 		// sorry, wrong key, plugin not authorized
 		e.Encode(proto.InitMessageResponse{false})
 		return
@@ -39,7 +46,7 @@ func handlePlugin(conn net.Conn) {
 	pluginsLock.Lock()
 
 	//add plugin to plugin list
-	el := plugins.PushFront(m.Name)
+	el := plugins.PushFront(im.Name)
 	defer func() {
 		// remove the plugin from the list when its goroutine exits
 		pluginsLock.Lock()

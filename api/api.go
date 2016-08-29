@@ -27,7 +27,7 @@ func NewConn(p Plugin, d ConnData) Conn {
 	c.conn, _ = net.Dial("tcp", d.Addr)
 	c.encoder = json.NewEncoder(c.conn)
 	c.decoder = json.NewDecoder(c.conn)
-	c.SendMessage(proto.InitMessage{
+	c.SendMessage(&proto.InitMessage{
 		p.Name,
 		d.Secret,
 	})
@@ -37,6 +37,6 @@ func NewConn(p Plugin, d ConnData) Conn {
 	return c
 }
 
-func (c Conn) SendMessage(m interface{}) {
-	c.encoder.Encode(m)
+func (c Conn) SendMessage(m proto.Messageable) {
+	c.encoder.Encode(m.ToMessage())
 }
