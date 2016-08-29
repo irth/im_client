@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/irth/im_client/proto"
 	"net"
 )
@@ -34,7 +33,7 @@ func NewConn(p Plugin, d ConnData) Conn {
 	})
 	var res proto.InitMessageResponse
 	c.decoder.Decode(&res)
-	fmt.Println(res.Success)
+	c.Connected = res.Success
 	return c
 }
 
