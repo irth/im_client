@@ -36,5 +36,5 @@ func (s *SubscribeMessage) ToMessage() Message {
 	return Message{
 		Type:             "SubscribeMessage",
 		SubscribeMessage: s,
-	}''
+	}
 }
