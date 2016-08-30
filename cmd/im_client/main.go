@@ -10,13 +10,15 @@ import (
 )
 
 type Plugin struct {
-	Name string
+	Name          string
+	Subscriptions []proto.Event
+	Mutex         sync.Mutex
 }
 
 var pluginsLock sync.Mutex
 var plugins *list.List
 
-func handlePlugin(conn net.Conn) {
+func initPlugin(conn net.Conn) {
 	defer conn.Close()
 	d := json.NewDecoder(conn)
 	e := json.NewEncoder(conn)
@@ -41,12 +43,15 @@ func handlePlugin(conn net.Conn) {
 	}
 
 	e.Encode(proto.InitMessageResponse{true}) // secret key is correct, plugin is authorized
+	plugin := Plugin{
+		Name: im.Name,
+	}
 
 	// every plugin has its own goroutine so we need to be careful when accessing global variables
 	pluginsLock.Lock()
 
 	//add plugin to plugin list
-	el := plugins.PushFront(im.Name)
+	el := plugins.PushFront(&plugin)
 	defer func() {
 		// remove the plugin from the list when its goroutine exits
 		pluginsLock.Lock()
@@ -56,6 +61,28 @@ func handlePlugin(conn net.Conn) {
 
 	// let go of the plugin list after modyfing it
 	pluginsLock.Unlock()
+
+	handlePlugin(&plugin, d, e)
+}
+
+func handlePlugin(plugin *Plugin, d *json.Decoder, e *json.Encoder) {
+	var err error = nil
+	var m proto.Message
+	for { // listen until we can't decode new messages anymore
+		err = d.Decode(&m)
+		if err != nil {
+			break
+		}
+		switch m.Type {
+		case "SubscribeMessage":
+			sm := m.SubscribeMessage
+			plugin.Mutex.Lock() // acquire a lock on the plugin so that nobody else can modify it while we do.
+			plugin.Subscriptions = append(plugin.Subscriptions, sm.Events...)
+			fmt.Println(plugin.Subscriptions)
+			plugin.Mutex.Unlock() // let go of the lock
+		}
+
+	}
 }
 
 func main() {
@@ -67,6 +94,6 @@ func main() {
 		if err != nil {
 			fmt.Println("error ln.Accept()")
 		}
-		go handlePlugin(conn)
+		go initPlugin(conn)
 	}
 }

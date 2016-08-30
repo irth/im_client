@@ -37,6 +37,12 @@ func NewConn(p Plugin, d ConnData) Conn {
 	return c
 }
 
+func (c Conn) Subscribe(e proto.Event) {
+	c.SendMessage(&proto.SubscribeMessage{
+		[]proto.Event{e},
+	})
+}
+
 func (c Conn) SendMessage(m proto.Messageable) {
 	c.encoder.Encode(m.ToMessage())
 }

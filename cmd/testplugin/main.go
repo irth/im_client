@@ -8,5 +8,6 @@ func main() {
 		"localhost:9123",
 		"sekret",
 	}
-	api.NewConn(p, d)
+	c := api.NewConn(p, d)
+	c.Subscribe("foo")
 }
