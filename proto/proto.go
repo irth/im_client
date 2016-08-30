@@ -31,3 +31,10 @@ type Event string
 type SubscribeMessage struct {
 	Events []Event
 }
+
+func (s *SubscribeMessage) ToMessage() Message {
+	return Message{
+		Type:             "SubscribeMessage",
+		SubscribeMessage: s,
+	}''
+}
